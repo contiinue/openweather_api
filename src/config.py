@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     POSTGRES_PORT: str
 
     class Config:
-        env_file = ".env"
+        env_file = "../.env"
         env_file_encoding = "utf-8"
 
 
