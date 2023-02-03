@@ -1,3 +1,3 @@
 PATH_TO_CHECK_CITY = (
-    "http://api.openweathermap.org/geo/1.0/" "direct?q={city}&limit={limit}&appid={key}"
+    "https://openweathermap.org/data/2.5/find?q={city}&appid={key}&units=metric"
 )
