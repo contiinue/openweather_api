@@ -5,8 +5,9 @@ from sqlalchemy.orm import aliased
 
 from database import get_async_session
 
+from .get_weather import add_city_to_model, check_city_name
 from .models import City, Weather
-from .service import add_city_to_model, check_city_name
+from .schemas import CityStats, CityStatsResponse
 
 router = APIRouter(prefix="")
 
@@ -31,5 +32,19 @@ async def get_last_weather(search: str, db: AsyncSession = Depends(get_async_ses
         .subquery()
     )
     query = select(sub_q, Weather).join(Weather, sub_q.c.time == Weather.time_created)
+    result = await db.execute(query)
+    return result.all()
+
+
+@router.get("/city_stats/")
+async def get_city_stats(
+    params: CityStats, db: AsyncSession = Depends(get_async_session)
+):
+    sub_q = select(func.avg(Weather.temperatures).label("average")).subquery()
+    query = (
+        select(City, Weather, sub_q)
+        .where(City.name == params.search.lower())
+        .filter(Weather.time_created.between(params.date_start, params.date_end))
+    )
     result = await db.execute(query)
     return result.all()

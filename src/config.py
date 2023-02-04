@@ -1,4 +1,9 @@
+import os
+from pathlib import Path
+
 from pydantic import BaseSettings
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 class Settings(BaseSettings):
@@ -10,9 +15,14 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str
     POSTGRES_PORT: str
 
+    REDIS_HOST: str
+    REDIS_PORT: str
+
     class Config:
-        env_file = "../.env"
+        env_file = BASE_DIR.parent.joinpath(".env")
         env_file_encoding = "utf-8"
 
 
 settings = Settings()
+
+TIME_ZONE = "Europe/Moscow"
