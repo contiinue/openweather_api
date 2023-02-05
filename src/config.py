@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     REDIS_PORT: str
 
     class Config:
-        env_file = BASE_DIR.parent.joinpath(".env")
+        env_file = BASE_DIR.parent.joinpath(".env.dev")
         env_file_encoding = "utf-8"
 
 
