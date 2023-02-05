@@ -10,16 +10,13 @@ ENV PYTHONUNBUFFERED=1
 RUN apt-get update && apt-get install \
     && python -m pip install --upgrade pip
 
-
 WORKDIR /app
 
-COPY docker/requirements.txt /app/
-RUN pip install -r requirements.txt
-COPY docker /app/
+COPY . app/
 
+RUN pip install -r app/docker/requirements.txt
 
-
-ENTRYPOINT ["sh","/app/docker/server_run.sh"]
+ENTRYPOINT ["sh", "app/docker/server_run.sh"]
 
 
 

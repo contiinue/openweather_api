@@ -1,3 +1,5 @@
+import datetime
+
 from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,11 +16,11 @@ router = APIRouter(prefix="")
 
 @router.post("/weather/{city}")
 async def add_city(
-    city, response: Response, session: AsyncSession = Depends(get_async_session)
+    city, response: Response, db: AsyncSession = Depends(get_async_session)
 ):
     response_city: int | None = await check_city_name(city)
     if response_city is not None:
-        return await add_city_to_model(city, response_city, session, response)
+        return await add_city_to_model(city, response_city, db, response)
     response.status_code = status.HTTP_400_BAD_REQUEST
     return {"message": "invalid name city"}
 
@@ -38,7 +40,8 @@ async def get_last_weather(search: str, db: AsyncSession = Depends(get_async_ses
 
 @router.get("/city_stats/")
 async def get_city_stats(
-    params: CityStats, db: AsyncSession = Depends(get_async_session)
+    params: CityStats = Depends(),
+    db: AsyncSession = Depends(get_async_session),
 ):
     sub_q = select(func.avg(Weather.temperatures).label("average")).subquery()
     query = (
