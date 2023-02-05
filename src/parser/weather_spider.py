@@ -9,25 +9,30 @@ from sqlalchemy.orm import sessionmaker
 from config import settings
 from weather.models import City, Weather
 
-
 SQLALCHEMY_DATABASE_URL = (
     f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}"
     f":{settings.POSTGRES_PORT}/{settings.POSTGRES_DATABASE}"
 )
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-session = sessionmaker(engine)()
 
-processor = Processor(settings=None)
+scrapy_settings = scrapy.settings.Settings(values={"LOG_LEVEL": "WARNING"})
+processor = Processor(settings=scrapy_settings)
+
+
+def get_session():
+    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+    with sessionmaker(engine)() as session:
+        return session
 
 
 class WeatherSpider(scrapy.Spider):
     name = "weather"
     base_url = "https://openweathermap.org/data/2.5/weather?id={city}&appid={key}"
+    db = get_session()
 
     def start_requests(self):
         q = select(City)
-        cities = session.execute(q).scalars().all()
+        cities = self.db.execute(q).scalars().all()
         for city in cities:
             url = self.base_url.format(
                 city=city.city_id, key=settings.OPEN_WEATHER_API_KEY
@@ -38,13 +43,12 @@ class WeatherSpider(scrapy.Spider):
         data = self._get_response_data(response.json())
         self._save_response_to_database(data, kwargs["city"])
 
-    @staticmethod
-    def _save_response_to_database(data: WeatherResponse, city: City) -> None:
+    def _save_response_to_database(self, data: WeatherResponse, city: City) -> None:
         weather = Weather(**data.__dict__)
         city.weather.append(weather)
-        session.add(city)
-        session.add(weather)
-        session.commit()
+        self.db.add(city)
+        self.db.add(weather)
+        self.db.commit()
 
     @staticmethod
     def _get_response_data(data) -> WeatherResponse:

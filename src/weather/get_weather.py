@@ -12,6 +12,7 @@ from .weather_config import PATH_TO_CHECK_CITY
 
 
 async def check_city_name(city_name: str) -> str | None:
+    """Check city name and return his id in openweather."""
     async with aiohttp.ClientSession() as session:
         url = PATH_TO_CHECK_CITY.format(
             city=city_name, key=settings.OPEN_WEATHER_API_KEY
@@ -27,6 +28,7 @@ async def check_city_name(city_name: str) -> str | None:
 async def add_city_to_model(
     city_name: str, city_id, session: AsyncSession, response: Response
 ) -> dict:
+    """Save city to the database."""
     try:
         stmt = insert(City).values(name=city_name.lower(), city_id=city_id)
         await session.execute(stmt)
