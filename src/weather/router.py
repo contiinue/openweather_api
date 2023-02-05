@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Response, status
+from pydantic import parse_obj_as
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
@@ -7,7 +8,7 @@ from database import get_async_session
 
 from .get_weather import add_city_to_model, check_city_name
 from .models import City, Weather
-from .schemas import CityStats
+from .schemas import CityStats, CityStatsResponse, LastWeatherResponse
 
 router = APIRouter(prefix="")
 
@@ -25,7 +26,9 @@ async def add_city(
 
 
 @router.get("/last_weather/")
-async def get_last_weather(search: str, db: AsyncSession = Depends(get_async_session)):
+async def get_last_weather(
+    search: str, db: AsyncSession = Depends(get_async_session)
+) -> list[LastWeatherResponse]:
     """Getting cities(Filtered by name) with last Weather by time."""
     sub_q = aliased(
         select(City.name, func.max(Weather.time_created).label("time"))
@@ -42,7 +45,7 @@ async def get_last_weather(search: str, db: AsyncSession = Depends(get_async_ses
 async def get_city_stats(
     params: CityStats = Depends(),
     db: AsyncSession = Depends(get_async_session),
-):
+) -> list[CityStatsResponse]:
     """Getting all weather of city by filter time."""
     sub_q = select(func.avg(Weather.temperatures).label("average")).subquery()
     query = (
